@@ -1,0 +1,43 @@
+# YojanaSetu — custom dark theme (emerald accent on deep navy)
+[theme]
+base = "dark"
+primaryColor = "#10b981"            # emerald
+backgroundColor = "#0b0f19"         # deep navy
+secondaryBackgroundColor = "#131a2e"# card / widget surface
+textColor = "#e5e7eb"
+linkColor = "#34d399"
+borderColor = "#24304f"
+codeBackgroundColor = "#0b0f19"
+codeTextColor = "#a5b4fc"
+
+redColor = "#f43f5e"
+orangeColor = "#f59e0b"
+yellowColor = "#eab308"
+greenColor = "#10b981"
+blueColor = "#3b82f6"
+violetColor = "#8b5cf6"
+grayColor = "#94a3b8"
+
+font = "Inter:https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+headingFont = "Inter:https://fonts.googleapis.com/css2?family=Inter:wght@600;700;800&display=swap"
+codeFont = "'JetBrains Mono':https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap"
+
+baseFontSize = 15
+headingFontSizes = ["34px", "26px", "20px", "17px", "15px", "13px"]
+headingFontWeights = [800, 700, 700, 600, 600, 500]
+
+baseRadius = "10px"
+buttonRadius = "10px"
+showWidgetBorder = true
+showSidebarBorder = true
+
+# candles / charts palette
+chartCategoricalColors = ["#10b981", "#3b82f6", "#8b5cf6", "#f59e0b", "#f43f5e", "#06b6d4", "#a3e635", "#ec4899"]
+
+[theme.sidebar]
+backgroundColor = "#0d1322"
+secondaryBackgroundColor = "#1a2340"
+codeBackgroundColor = "#0d1322"
+borderColor = "#24304f"
+textColor = "#e5e7eb"
+primaryColor = "#10b981"
