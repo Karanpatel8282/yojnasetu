@@ -114,8 +114,34 @@ def scheme_tokens(scheme: dict) -> list:
 
 
 def keyword_bag(scheme: dict) -> str:
-    """A single space-joined string of a scheme's tokens (for TF-IDF)."""
+    """A single space-joined string of a scheme's Marathi tokens (for TF-IDF)."""
     return " ".join(scheme_tokens(scheme))
+
+
+def scheme_tokens_en(scheme: dict) -> list:
+    """Extract clean English tokens for English TF-IDF matching."""
+    fields = [
+        scheme.get("scheme_name_en", ""),
+        scheme.get("category_en", ""),
+        scheme.get("state_en", ""),
+        scheme.get("description_en", ""),
+        scheme.get("benefits_en", ""),
+        scheme.get("beneficiary_type", ""),
+    ]
+    text = " ".join(fields).lower()
+    # Basic English word cleaning
+    words = re.findall(r"\b[a-z]{2,}\b", text)
+    english_stops = {
+        "the", "and", "is", "in", "to", "of", "for", "with", "a", "an", "by", "from",
+        "on", "at", "as", "be", "this", "that", "which", "or", "are", "was", "were",
+        "it", "its", "under", "all", "any", "each", "per", "such", "into", "also"
+    }
+    return [w for w in words if w not in english_stops]
+
+
+def keyword_bag_en(scheme: dict) -> str:
+    """A single space-joined string of a scheme's English tokens (for English TF-IDF)."""
+    return " ".join(scheme_tokens_en(scheme))
 
 
 # ----------------------------------------------------------------------

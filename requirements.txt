@@ -1,4 +1,7 @@
-# scheme-retrieval-v2 — Streamlit Scheme Recommender (NLP + retrieval)
-streamlit>=1.57
+# scheme-retrieval-v2 — Streamlit Scheme Recommender (Bilingual NLP + Hybrid Retrieval)
+streamlit>=1.35
 scikit-learn>=1.3
 pandas>=2.0
+sentence-transformers>=3.0
+torch>=2.0
+numpy>=1.24

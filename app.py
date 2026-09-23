@@ -1,16 +1,14 @@
 """
-app.py  —  YojanaSetu (final UI)
-====================================
-Premium dark-ui Streamlit app for the Marathi government-scheme
-retrieval engine.  Tidy single file — read top to bottom.
+app.py  —  YojanaSetu (Bilingual Hybrid UI)
+============================================
+Premium dark-UI Streamlit app for the Indian government-scheme
+retrieval & recommendation engine.
 
-Flow
-  NAVBAR -> SIDEBAR(profile + language) -> HERO + SEARCH
-         -> CATEGORY filter -> STAT cards -> RANKED result cards
-         -> Tabs: Recommendations | Explore dataset
-
-The engine (engine.py) does TF-IDF ranking + eligibility; this file is
-only the presentation layer.
+Features:
+  - Full Bilingual UI (English & मराठी)
+  - Tripartite Hybrid Search (Marathi/English TF-IDF + Multilingual Semantic AI + 9-rule Eligibility)
+  - Direct Official Portal Application Links
+  - Interactive Dataset Exploration
 """
 import html as _html
 import pandas as pd
@@ -19,10 +17,10 @@ from collections import Counter
 
 from engine import load_schemes, build_index, rank, DATA_PATH
 
-st.set_page_config(page_title="YojanaSetu", page_icon="🏛️", layout="wide")
+st.set_page_config(page_title="YojanaSetu — Government Schemes", page_icon="🏛️", layout="wide")
 
 # =====================================================================
-# 1. DESIGN SYSTEM  (custom CSS — a premium look the user requested)
+# 1. DESIGN SYSTEM  (Custom Dark Glassmorphic CSS)
 # =====================================================================
 CSS = """
 <style>
@@ -52,7 +50,7 @@ CSS = """
 .hero{text-align:center;padding:.2rem 0 1.6rem;}
 .hero h2{font-size:2.15rem;margin:.2rem 0 .4rem;font-weight:800;letter-spacing:-.02em;
   background:linear-gradient(90deg,#fff,#9fb3d9);-webkit-background-clip:text;background-clip:text;color:transparent;}
-.hero .sub{color:#93a5c7;font-size:.96rem;max-width:720px;line-height:1.55;margin:0 auto;}
+.hero .sub{color:#93a5c7;font-size:.96rem;max-width:760px;line-height:1.55;margin:0 auto;}
 
 [data-testid="stVerticalBlockBorderWrapper"]{background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.015));
   border:1px solid var(--line)!important;border-radius:18px!important;backdrop-filter:blur(6px);
@@ -72,26 +70,29 @@ CSS = """
 .rcard .rnum{width:30px;height:30px;flex-shrink:0;border-radius:9px;display:grid;place-items:center;
   font-weight:800;font-size:.9rem;color:#0b1220;background:linear-gradient(135deg,var(--accent),#34d399);}
 .rcard .rtitle{flex:1;min-width:0;}
-.rcard .rname{font-size:.98rem;font-weight:700;line-height:1.35;}
-.rcard .rmeta{font-size:.74rem;color:#8fa0bf;margin-top:2px;}
+.rcard .rname{font-size:1.02rem;font-weight:700;line-height:1.35;color:#f8fafc;}
+.rcard .rname-sub{font-size:.82rem;font-weight:500;color:#94a3b8;margin-top:1px;}
+.rcard .rmeta{font-size:.74rem;color:#8fa0bf;margin-top:3px;}
 .rcard .rbadge{margin-left:auto;font-size:.72rem;font-weight:700;padding:.3rem .6rem;border-radius:999px;white-space:nowrap;}
 .rbadge.on{color:#0f2e22;background:linear-gradient(135deg,#34d399,#10b981);box-shadow:0 4px 14px -4px rgba(16,185,129,.6);}
 .rbadge.off{color:#3b0a17;background:linear-gradient(135deg,#fb7185,#f43f5e);box-shadow:0 4px 14px -4px rgba(244,63,94,.5);}
 .rcard .rchips{display:flex;gap:6px;flex-wrap:wrap;margin:.7rem 0 .55rem;}
 .rchip{font-size:.7rem;font-weight:600;padding:.2rem .6rem;border-radius:999px;background:rgba(139,92,246,.14);color:#c4b5fd;border:1px solid rgba(139,92,246,.3);}
 .rmatch{display:flex;align-items:center;gap:.6rem;margin:.35rem 0;}
-.rmatch .mlab{font-size:.72rem;color:#8fa0bf;min-width:44px;}
+.rmatch .mlab{font-size:.72rem;color:#8fa0bf;min-width:55px;}
 .rmatch .mbar{flex:1;height:7px;border-radius:99px;background:rgba(255,255,255,.08);overflow:hidden;}
 .rmatch .mbar i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,var(--accent),var(--accent3));}
 .rmatch .mval{font-weight:700;font-size:.82rem;min-width:38px;text-align:right;}
 .rwhy{font-size:.78rem;color:#aeb8d0;line-height:1.5;padding-top:.3rem;border-top:1px solid var(--line);}
+.rlink{display:inline-flex;align-items:center;gap:5px;font-size:.76rem;color:#38bdf8;text-decoration:none;margin-top:4px;}
+.rlink:hover{text-decoration:underline;}
 </style>
 """
 st.html(CSS)
 
 
 def esc(s: str) -> str:
-    """HTML-escape a string for safe insertion into our custom markup."""
+    """HTML-escape a string for safe insertion into markup."""
     return _html.escape(str(s or ""), quote=True)
 
 
@@ -106,16 +107,19 @@ LANG = {
         "occupation": "Occupation", "residence": "Residence",
         "bpl": "BPL card holder", "disability": "Specially-abled",
         "indexed": "schemes indexed", "reset_btn": "Reset profile",
-        "search_ph": "Type here — scholarship, women loan, pension…",
+        "search_ph": "Search by keyword or natural phrase — e.g. student scholarship, farmer subsidy, women loan...",
         "quick": "Quick searches:", "cat": "Category filter",
         "top": "Show top results",
         "stat_total": "Total schemes indexed", "stat_eligible": "Eligible in results",
         "stat_top": "Top match score", "stat_avg": "Avg result match",
         "tab_rec": "Recommendations", "tab_exp": "Explore dataset",
-        "tagline": "Search & rank Indian government schemes by relevance and your eligibility profile.",
-        "empty": "No results — adjust filters / category.",
-        "det": "View details", "match": "Match",
+        "tagline": "AI-powered bilingual search & recommendation engine ranking schemes by semantic relevance and eligibility.",
+        "empty": "No results found — try adjusting filters or query.",
+        "det": "View scheme details & benefits", "match": "Hybrid Match",
         "on": "Eligible · पात्र", "off": "Not eligible · अपात्र",
+        "apply_btn": "🔗 Official Application Portal",
+        "all_states": "All states / Central",
+        "quick_pills": ["Farmer subsidy", "Student scholarship", "Women business loan", "Senior citizen pension", "Housing scheme", "Unemployment allowance"],
     },
     "mr": {
         "profile": "पात्रता प्रोफाइल", "lang": "भाषा",
@@ -124,33 +128,34 @@ LANG = {
         "occupation": "व्यवसाय", "residence": "निवास",
         "bpl": "BPL कार्डधारक", "disability": "दिव्यांग",
         "indexed": "योजना", "reset_btn": "↺ रीसेट",
-        "search_ph": "टाइप करा — शिष्यवृत्ती, महिला कर्ज, पेन्शन…",
+        "search_ph": "शोध करा — शिष्यवृत्ती, महिला कर्ज, शेतकरी कर्जमाफी, पेन्शन…",
         "quick": "झटपट शोध:", "cat": "वर्ग फिल्टर",
         "top": "निकाल दाखवा",
         "stat_total": "एकूण योजना", "stat_eligible": "पात्र निकाल",
         "stat_top": "सर्वोत्तम जुळणी", "stat_avg": "सरासरी जुळणी",
         "tab_rec": "शिफारस", "tab_exp": "डेटासेट एक्सप्लोर",
-        "tagline": "शासकीय योजना शोधा — प्रासंगिकता व पात्रता प्रोफाइलनुसार सर्वात संबंधित योजना सर्वात वर.",
+        "tagline": "शासकीय योजना शोधा — प्रासंगिकता, AI अर्थबोध व पात्रता प्रोफाइलनुसार सर्वोत्तम योजना सर्वात वर.",
         "empty": "निकाल नाही — फिल्टर / वर्ग बदला.",
-        "det": "तपशील पाहा", "match": "जुळणी",
+        "det": "तपशील व लाभ पाहा", "match": "एकत्रित जुळणी",
         "on": "पात्र", "off": "अपात्र",
+        "apply_btn": "🔗 अधिकृत अर्ज पोर्टल",
+        "all_states": "सर्व राज्ये / मध्यवर्ती",
+        "quick_pills": ["शिष्यवृत्ती", "महिला कर्ज", "शेतकरी कर्जमाफी", "पेन्शन ज्येष्ठ", "गृहनिर्माण", "बेरोजगार भत्ता"],
     },
 }
 
-
 # =====================================================================
-# 3. ENGINE (cached: schemes + tf-idf index, built once)
+# 3. ENGINE (cached: schemes + dual tf-idf + semantic embeddings)
 # =====================================================================
-@st.cache_resource(ttl="1h")
+@st.cache_resource(ttl="2h")
 def load_and_build(path=DATA_PATH):
     schemes = load_schemes(path)
-    vectorizer, matrix = build_index(schemes)
-    return schemes, vectorizer, matrix
+    bundle, legacy_matrix = build_index(schemes)
+    return schemes, bundle, legacy_matrix
 
 
-schemes, vectorizer, matrix = load_and_build()
+schemes, index_bundle, legacy_matrix = load_and_build()
 
-# Category visuals (icon + badge colour) for chips
 CAT_ICON = {
     "शिक्षण": "🎓", "महिला व बालक": "🧕", "कृषी": "🌾", "ग्रामीण व पर्यावरण": "🌱",
     "सामाजिक कल्याण": "🤝", "आरोग्य": "🏥", "कौशल्य व रोजगार": "💼", "व्यवसाय": "🏢",
@@ -159,14 +164,6 @@ CAT_ICON = {
     "वाहतूक व पायाभूत सुविधा": "🚆", "उपयुक्तता व स्वच्छता": "🚰",
     "सार्वजनिक सुरक्षा": "👮", "कायदा व न्याय": "⚖️",
 }
-CAT_COLOR = {
-    "शिक्षण": "blue", "महिला व बालक": "violet", "कृषी": "green", "ग्रामीण व पर्यावरण": "green",
-    "सामाजिक कल्याण": "orange", "आरोग्य": "red", "कौशल्य व रोजगार": "blue", "व्यवसाय": "orange",
-    "बँकिंग व विमा": "yellow", "वित्तीय सेवा व विमा": "yellow", "खेळ व संस्कृती": "blue",
-    "गृहनिर्माण": "orange", "प्रवास व पर्यटन": "green", "विज्ञान": "violet",
-    "आयटी व कम्युनिकेशन्स": "violet", "वाहतूक व पायाभूत सुविधा": "blue",
-    "उपयुक्तता व स्वच्छता": "green", "सार्वजनिक सुरक्षा": "red", "कायदा व न्याय": "blue",
-}
 
 
 def cat_label(c: str) -> str:
@@ -174,17 +171,21 @@ def cat_label(c: str) -> str:
 
 
 # =====================================================================
-# 4. SIDEBAR  (language toggle + eligibility profile)
+# 4. SIDEBAR  (Language toggle + Eligibility profile)
 # =====================================================================
 lang_sel = st.sidebar.segmented_control(
     LANG["en"]["lang"], ["English", "मराठी"], default="English")
-t = LANG["mr"] if lang_sel == "मराठी" else LANG["en"]
+is_en = (lang_sel == "English")
+t = LANG["en"] if is_en else LANG["mr"]
 
 st.sidebar.title("👤 " + t["profile"])
 age = st.sidebar.number_input(t["age"], 0, 120, 25)
 gender = st.sidebar.segmented_control(t["gender"], ["सर्व", "महिला", "पुरुष"], default="सर्व")
-state_options = ["सर्व राज्ये", "All states"] + sorted({s["state"] for s in schemes if s.get("state")})
+
+all_state_names = sorted({s.get("state") for s in schemes if s.get("state")})
+state_options = [t["all_states"]] + all_state_names
 state_label = st.sidebar.selectbox(t["state"], state_options)
+
 income = st.sidebar.number_input(t["income"], 0, 50_000_000, 150_000, step=10_000, format="%d")
 caste = st.sidebar.selectbox(t["caste"], ["सर्व", "SC", "ST", "OBC", "EWS"])
 occupation = st.sidebar.segmented_control(
@@ -193,6 +194,7 @@ occupation = st.sidebar.segmented_control(
 residence = st.sidebar.segmented_control(t["residence"], ["दोन्ही", "ग्रामीण", "शहरी"], default="दोन्ही")
 bpl = st.sidebar.toggle(t["bpl"], value=False)
 disability = st.sidebar.toggle(t["disability"], value=False)
+
 if st.sidebar.button(t["reset_btn"], use_container_width=True):
     for k in ["q", "ex", "cat_pick", "topk"]:
         st.session_state.pop(k, None)
@@ -206,9 +208,9 @@ st.html(f"""
   <div class="logo"></div>
   <div class="nav-br">
     <h1>YojanaSetu</h1>
-    <p>शासकीय योजना शिफारस व शोध प्रणाली</p>
+    <p>{'Bilingual AI Scheme Discovery & Recommendation' if is_en else 'शासकीय योजना शिफारस व शोध प्रणाली'}</p>
   </div>
-  <div class="badge">🗂️ {len(schemes)} {t['indexed']} · 37 राज्ये</div>
+  <div class="badge">🗂️ {len(schemes)} {t['indexed']} · 37 States · Central</div>
 </div>
 
 <div class="hero">
@@ -225,9 +227,7 @@ def _apply_example():
 
 st.text_input("search", key="q", label_visibility="collapsed", type="search", placeholder="🔎 " + t["search_ph"])
 st.caption(t["quick"])
-st.pills("examples", ["शिष्यवृत्ती", "महिला कर्ज", "शेतकरी कर्जमाफी", "पेन्शन ज्येष्ठ",
-                      "गृहनिर्माण", "बेरोजगार भत्ता", "अनुदान शेतकरी"],
-         key="ex", on_change=_apply_example, label_visibility="collapsed")
+st.pills("examples", t["quick_pills"], key="ex", on_change=_apply_example, label_visibility="collapsed")
 
 query = (st.session_state.get("q") or "").strip()
 
@@ -237,7 +237,7 @@ query = (st.session_state.get("q") or "").strip()
 profile = {
     "age": age,
     "gender": {"महिला": "female", "पुरुष": "male"}.get(gender, "all"),
-    "state": "all" if state_label in ("सर्व राज्ये", "All states") else state_label,
+    "state": "all" if state_label == t["all_states"] else state_label,
     "income": income,
     "occupation": "all" if occupation == "सर्व" else occupation,
     "residence": {"ग्रामीण": "rural", "शहरी": "urban"}.get(residence, "both"),
@@ -255,7 +255,7 @@ topk = st.slider(t["top"], 5, 40, 12, 3, key="topk")
 # =====================================================================
 # 7. RANK + FILTER
 # =====================================================================
-results = rank(schemes, vectorizer, matrix, query, profile, top_k=topk)
+results = rank(schemes, index_bundle, legacy_matrix, query, profile, top_k=topk)
 if selected_cats:
     results = [r for r in results if set(r["scheme"].get("categories", [])) & selected_cats]
     results.sort(key=lambda r: r["score"], reverse=True)
@@ -274,7 +274,7 @@ st.html('<div class="stats">'
         + stat("🗂️", "linear-gradient(135deg,#34d399,#10b981)", len(schemes), t["stat_total"])
         + stat("✅", "linear-gradient(135deg,#a78bfa,#8b5cf6)", n_eligible, t["stat_eligible"])
         + stat("🏆", "linear-gradient(135deg,#60a5fa,#3b82f6)", f"{best*100:.0f}%", t["stat_top"])
-        + stat("📄", "linear-gradient(135deg,#fbbf24,#f59e0b)", f"{avg:.0f}%", t["stat_avg"])
+        + stat("🤖", "linear-gradient(135deg,#fbbf24,#f59e0b)", f"{avg:.0f}%", t["stat_avg"])
         + '</div>')
 
 # =====================================================================
@@ -289,21 +289,39 @@ with tab_rec:
     for i, r in enumerate(results, start=1):
         s = r["scheme"]
         on = r["eligible"]
+
+        # Primary vs secondary language display
+        if is_en and s.get("scheme_name_en"):
+            primary_name = s.get("scheme_name_en")
+            sub_name = s.get("scheme_name", "")
+            meta_dept = s.get("department_or_ministry_en") or s.get("department_or_ministry", "")
+            meta_state = s.get("state_en") or s.get("state", "")
+        else:
+            primary_name = s.get("scheme_name", "")
+            sub_name = s.get("scheme_name_en", "")
+            meta_dept = s.get("department_or_ministry", "")
+            meta_state = s.get("state", "")
+
         chips = " ".join(f'<span class="rchip">{esc(cat_label(c))}</span>'
                          for c in s.get("categories", []))
         pct = min(max(r["score"], 0) * 100, 100)
+        
         reason = esc(" ; ".join(r["reasons"]) if r["reasons"]
-                     else ("कोणतेही निर्बंध नाही" if lang_sel == "मराठी" else "no restrictions"))
+                     else ("No restrictions" if is_en else "कोणतेही निर्बंध नाही"))
         badge = t["on"] if on else t["off"]
         badge_cls = "rbadge on" if on else "rbadge off"
+
+        url = s.get("apply_url") or s.get("official_url") or ""
+        link_html = f'<a class="rlink" href="{esc(url)}" target="_blank">{t["apply_btn"]} ↗</a>' if url else ""
 
         st.html(f"""
         <div class="rcard">
           <div class="rc-top">
             <div class="rnum">{i}</div>
             <div class="rtitle">
-              <div class="rname">{esc(s.get('scheme_name',''))}</div>
-              <div class="rmeta">{esc(s.get('state',''))} · {esc(s.get('department_or_ministry',''))}</div>
+              <div class="rname">{esc(primary_name)}</div>
+              {f'<div class="rname-sub">{esc(sub_name)}</div>' if sub_name and sub_name != primary_name else ''}
+              <div class="rmeta">{esc(meta_state)} · {esc(meta_dept)}</div>
             </div>
             <span class="{badge_cls}">{badge}</span>
           </div>
@@ -314,14 +332,23 @@ with tab_rec:
             <span class="mval">{pct:.0f}%</span>
           </div>
           <div class="rwhy">ℹ️ {reason}</div>
+          {link_html}
         </div>
         """)
         with st.expander("📖 " + t["det"]):
-            st.markdown(f"**Description:** {s.get('description','')}")
-            st.markdown(f"**लाभ / Benefits:** {s.get('benefits','')}")
-            st.markdown(f"**पात्रता निकष / Criteria:** {s.get('eligibility_criteria','')}")
-            st.markdown(f"**अर्ज प्रक्रिया / Application:** {s.get('application_process','')}")
-            st.markdown(f"**कागदपत्रे / Documents:** {s.get('documents_required','')}")
+            desc = s.get("description_en") if is_en and s.get("description_en") else s.get("description", "")
+            bene = s.get("benefits_en") if is_en and s.get("benefits_en") else s.get("benefits", "")
+            crit = s.get("eligibility_criteria_en") if is_en and s.get("eligibility_criteria_en") else s.get("eligibility_criteria", "")
+            app_p = s.get("application_process_en") if is_en and s.get("application_process_en") else s.get("application_process", "")
+            docs = s.get("documents_required_en") if is_en and s.get("documents_required_en") else s.get("documents_required", "")
+
+            st.markdown(f"**{'Description' if is_en else 'वर्णन'}:** {desc}")
+            st.markdown(f"**{'Benefits' if is_en else 'लाभ'}:** {bene}")
+            st.markdown(f"**{'Eligibility Criteria' if is_en else 'पात्रता निकष'}:** {crit}")
+            st.markdown(f"**{'Application Process' if is_en else 'अर्ज प्रक्रिया'}:** {app_p}")
+            st.markdown(f"**{'Documents Required' if is_en else 'कागदपत्रे'}:** {docs}")
+            if url:
+                st.link_button(t["apply_btn"], url)
 
 with tab_exp:
     _cs = Counter(c for s in schemes for c in s.get("categories", []))
@@ -338,8 +365,11 @@ with tab_exp:
         st.bar_chart(state_df.set_index("State"))
 
     with st.container(border=True):
-        st.subheader("All schemes", icon=":material/table_chart:")
+        st.subheader("All schemes (1,000)", icon=":material/table_chart:")
         st.dataframe(pd.DataFrame([{
-            "ID": s["scheme_id"], "योजना": s["scheme_name"],
-            "राज्य": s.get("state", ""), "वर्ग": ", ".join(s.get("categories", [])),
-        } for s in schemes]), hide_index=True, height=320, width="stretch")
+            "ID": s["scheme_id"],
+            "English Name": s.get("scheme_name_en", ""),
+            "मराठी नाव": s.get("scheme_name", ""),
+            "State / राज्य": s.get("state", ""),
+            "Category": ", ".join(s.get("categories", [])),
+        } for s in schemes]), hide_index=True, height=340, width="stretch")
